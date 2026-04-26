@@ -171,21 +171,25 @@ void loop() {
   // ===== RECOVERY =====
     // 0b11111 means all sensors are reading WHITE (assuming 0 is black)
     if (pattern == 0b11111) {
-      setMotors(-80, -80);
-      /*
+      //setMotors(-80, -80);
+      
         if (lastL == lastR) {
           // Exception: It was going straight. Reverse straight back.
-          setMotors(-130, -130);
+          setMotors(-80, -80);
         } 
         else if (lastL > lastR) {
           // Last known action was a right turn. Spin right.
-          setMotors(140, -140); 
+          setMotors(-80, -80);
+          delay(100);
+          setMotors(80, -80); 
         } 
         else {
           // Last known action was a left turn. Spin left.
-          setMotors(-140, 140); 
+          setMotors(-80, -80);
+          delay(100);
+          setMotors(-80, 80); 
         }
-        */
+        
         return; 
     }
 
