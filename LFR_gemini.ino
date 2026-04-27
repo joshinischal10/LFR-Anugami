@@ -1,5 +1,5 @@
 // ================================================================
-//  LINE FOLLOWER — ANUGAMI BUILD VX (RACE OPTIMIZED)
+//  LINE FOLLOWER — ANUGAMI BUILD VX (RACE OPTIMIZED - REFINED)
 // ================================================================
 
 // ── PINS ─────────────────────────────────────────────────────────
@@ -12,11 +12,10 @@
 
 const uint8_t SENSOR_PINS[5] = {11, 10, 12, 13, A0};
 
-// ── SPEED TUNING (HIGH SPEED) ───────────────────────────────────
-const int BASE_SPEED   = 160;   
-const int GENTLE_INNER = 130;   
-const int MEDIUM_INNER = 90;    
-const int SHARP_INNER  = -160;  
+// ── SPEED TUNING (REFINED) ──────────────────────────────────────
+const int BASE_SPEED   = 150;   
+const int GENTLE_INNER = 110;   
+const int MEDIUM_INNER = 130;   
 
 // ── LAST MOTOR MEMORY ────────────────────────────────────────────
 int lastL = 0;
@@ -76,21 +75,22 @@ void setup() {
   for (int i = 0; i < 5; i++) {
     pinMode(SENSOR_PINS[i], INPUT);
   }
-  
-  // 2-second delay gives you time to place the robot and move your hands away
+
   delay(2000); 
 }
 
 // ================================================================
-//  ACTION LOGIC
+//  ACTION LOGIC (REFINED)
 // ================================================================
 
 void getAction(int pattern, int &L, int &R) {
   switch (pattern) {
+
     // ── STRAIGHT ────────────────────────────────
     case 0b11011:
     case 0b00100:
     case 0b01110:
+    case 0b10001:
       L = BASE_SPEED;
       R = BASE_SPEED;
       break;
@@ -99,33 +99,33 @@ void getAction(int pattern, int &L, int &R) {
     case 0b11101:
     case 0b11001:
       L = BASE_SPEED;
-      R = GENTLE_INNER;
+      R = -BASE_SPEED; //- 30;
       break;
 
     case 0b11100:
       L = BASE_SPEED;
-      R = MEDIUM_INNER;
+      R = -130;
       break;
 
     case 0b11110:
       L = BASE_SPEED;
-      R = SHARP_INNER;
+      R = -140;   // smoother than full reverse
       break;
 
     // ── RIGHT TURNS ─────────────────────────────
     case 0b10111:
     case 0b10011:
-      L = GENTLE_INNER;
+      L = -BASE_SPEED; //- 30;
       R = BASE_SPEED;
       break;
 
     case 0b00111:
-      L = MEDIUM_INNER;
+      L = -130;
       R = BASE_SPEED;
       break;
 
     case 0b01111:
-      L = SHARP_INNER;
+      L = -140;
       R = BASE_SPEED;
       break;
 
@@ -162,36 +162,25 @@ void loop() {
 
   int pattern = (s1 << 4) | (s2 << 3) | (s3 << 2) | (s4 << 1) | s5;
 
-  // ===== STOP (e.g., T-Junction or All Black/White depending on surface) =====
-  if (pattern == 0b00000) {
-    stopMotors();
-    return;
-  }
-
   // ===== RECOVERY =====
-    // 0b11111 means all sensors are reading WHITE (assuming 0 is black)
-    if (pattern == 0b11111) {
-      //setMotors(-80, -80);
-      
-        if (lastL == lastR) {
-          // Exception: It was going straight. Reverse straight back.
-          setMotors(-80, -80);
-        } 
-        else if (lastL > lastR) {
-          // Last known action was a right turn. Spin right.
-          setMotors(-80, -80);
-          delay(100);
-          setMotors(80, -80); 
-        } 
-        else {
-          // Last known action was a left turn. Spin left.
-          setMotors(-80, -80);
-          delay(100);
-          setMotors(-80, 80); 
-        }
-        
-        return; 
+  if (pattern == 0b11111) {
+
+    if (lastL == lastR) {
+      setMotors(-120, -120);
+    } 
+    else if (lastL > lastR) {
+      // setMotors(-120, -120);
+      // delay(120);
+      setMotors(180, -160);   // forward-biased right recovery
+    } 
+    else {
+      // setMotors(-120, -120);
+      // delay(120);
+      setMotors(-160, 180);   // forward-biased left recovery
     }
+
+    return; 
+  }
 
   // ===== NORMAL =====
   int L, R;
